@@ -25,18 +25,49 @@
 ## Getting started
 
 ### 1. Clone the repo
+
 ```bash
 git clone git@github.com:dcollinscode/product-demo-assessment.git
 cd product-demo-assessment
+```
 
-### 3. Backend
- 
+### 2. Backend
+
 ```bash
 cd Backend
 cp .env.example .env          # set DATABASE_URL
 npm install
 npx prisma migrate deploy     # runs versioned migrations
 npm run dev                   # http://localhost:3001
+```
+
+### 3. Frontend
+
+From the repository root (`cd ..` if you are still inside `Backend`):
+
+```bash
+cd Frontend
+cp .env.example .env          # set VITE_API_URL=http://localhost:3001
+npm install
+npm run dev                   # http://localhost:5173
+```
+ 
+---
+
+## Environment variables
+ 
+**`Backend/.env.example`**
+```
+NODE_ENV=development
+PORT=3001
+DATABASE_URL=postgres://user:password@localhost:5432/products_db
+CORS_ORIGIN=http://localhost:5173
+LOG_LEVEL=debug
+```
+ 
+**`Frontend/.env.example`**
+```
+VITE_API_URL=http://localhost:3001
 ```
 
 ---
