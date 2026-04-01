@@ -5,7 +5,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { requestLogger } from "./middleware/requestLogger";
 import { globalErrorHandler } from "./middleware/errorHandler";
-
+import productRoutes from "./routes/products";
 import { checkDbConnection } from "./config/db";
 import logger from "./utils/logger";
 
@@ -32,7 +32,6 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: { error: "Too many requests, please try again later." },
 });
-
 app.use("/api", limiter);
 
 // ── General middleware ───────────────────────────────────────────────────────
@@ -40,7 +39,7 @@ app.use(express.json({ limit: "10kb" })); // Body size limit — prevents large 
 app.use(requestLogger);
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-
+app.use("/api/products", productRoutes);
 
 // Health check endpoint — used by load balancers / orchestrators
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
