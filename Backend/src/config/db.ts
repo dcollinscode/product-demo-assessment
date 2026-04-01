@@ -1,22 +1,43 @@
-import { Pool } from "pg";
-import logger from "../utils/logger"
+import { PrismaClient } from "@prisma/client";
+import logger from "../utils/logger";
 
-// A pool reuses connections across requestsso that every request opens and closes its own DB connection —
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20,                    
-  idleTimeoutMillis: 30_000, 
-  connectionTimeoutMillis: 2_000, 
+type PrismaQueryLogEvent = {
+  timestamp: Date;
+  query: string;
+  params: string;
+  duration: number;
+  target: string;
+};
+
+/** Payload emitted by `prisma.$on("error" | "warn" | "info", …)`. */
+type PrismaClientLogEvent = {
+  timestamp: Date;
+  message: string;
+  target: string;
+};
+
+// Single PrismaClient instance for the process —
+// same principle as pg.Pool: reuse connections, don't create per-request.
+const prisma = new PrismaClient({
+  log: [
+    { emit: "event", level: "query"  },
+    { emit: "event", level: "error"  },
+    { emit: "event", level: "warn"   },
+  ],
 });
 
-pool.on("error", (err) => {
-  // Unexpected client error — log but don't crash the process
-  logger.error("Unexpected DB pool error", { error: err.message });
+// Forward Prisma's internal logs to Winston
+prisma.$on("query", (e: PrismaQueryLogEvent) => {
+  logger.debug("Prisma query", { query: e.query, duration: `${e.duration}ms` });
+});
+
+prisma.$on("error", (e: PrismaClientLogEvent) => {
+  logger.error("Prisma error", { message: e.message });
 });
 
 export async function checkDbConnection(): Promise<void> {
-  const client = await pool.connect();
-  client.release();
+  await prisma.$queryRaw`SELECT 1`;
 }
 
-export default pool;
+export { prisma };
+export default prisma;

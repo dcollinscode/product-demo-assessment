@@ -1,24 +1,23 @@
-import pool from "../config/db";
-import { Product, CreateProductDTO } from "../models/product";
-
+import prisma from "../config/db";
 import logger from "../utils/logger";
 
-export async function getAllProducts(): Promise<Product[]> {
-  const result = await pool.query<Product>(
-    "SELECT id, name, created_at, updated_at FROM products ORDER BY created_at DESC"
-  );
-  logger.debug("Fetched products", { count: result.rowCount });
-  return result.rows;
+// Note what changed from the pg version:
+// - No SQL strings — Prisma generates them from method calls
+// - Return types are fully inferred — no manual Product interface cast needed
+// - The trim() is still here — Zod trims before this runs, but defense in depth
+
+export async function getAllProducts() {
+  const products = await prisma.product.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  logger.debug("Fetched products", { count: products.length });
+  return products;
 }
 
-export async function createProduct(dto: CreateProductDTO): Promise<Product> {
-  const { name } = dto;
-  const result = await pool.query<Product>(
-    "INSERT INTO products (name) VALUES ($1) RETURNING id, name, created_at, updated_at",
-    [name.trim()]   // Parameterized query — prevents SQL injection
-  );
-  const product = result.rows[0];
-  // TypeScript non-null assertion safe here: INSERT RETURNING always returns a row
-  logger.info("Created product", { id: product!.id, name: product!.name });
-  return product!;
+export async function createProduct(dto: { name: string }) {
+  const product = await prisma.product.create({
+    data: { name: dto.name.trim() },
+  });
+  logger.info("Created product", { id: product.id, name: product.name });
+  return product;
 }
