@@ -1,0 +1,52 @@
+services:
+
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context:    ./Backend
+      dockerfile: Dockerfile
+    container_name: products_backend
+    restart: unless-stopped
+    env_file:
+      - ./Backend/.env 
+    environment:
+      NODE_ENV:     production
+      PORT:         3001
+      # Pulled from your .env file — never hardcoded
+      
+      LOG_LEVEL:    ${LOG_LEVEL:-info}
+    command: sh -c "npx prisma migrate deploy && node dist/app.js"
+    ports:
+      - "3001:3001"
+    networks:
+      - app-network
+
+  # ── Frontend ──────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context:    ./Frontend
+      dockerfile: Dockerfile
+    container_name: products_frontend
+    restart: unless-stopped
+    env_file:
+      - ./Frontend/.env 
+    environment:
+      # Runtime env var — Vite dev server reads this directly
+      VITE_API_URL: http://localhost:3001
+    volumes:
+      # Mount source into the container so file changes trigger hot reload
+      - ./Frontend/src:/app/src
+      # Keep node_modules from the container — don't override with host's
+      - /app/node_modules
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+# No volumes block needed — Neon manages storage externally

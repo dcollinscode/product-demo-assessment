@@ -1,0 +1,14 @@
+# Keep Docker build contexts lean — don't send these to the daemon
+
+node_modules
+dist
+build
+.git
+.gitignore
+*.log
+.env
+.env.local
+coverage
+.nyc_output
+README.md
+*.md
