@@ -24,14 +24,43 @@
 
 ## Getting started
 
-### 1. Clone the repo
+
+### Clone the repo
 
 ```bash
 git clone git@github.com:dcollinscode/product-demo-assessment.git
 cd product-demo-assessment
 ```
 
-### 2. Backend
+## Docker (recommended)
+
+### Set up environment variables in /Backend and /Frontend
+
+### Run
+ 
+```bash
+docker compose up --build
+```
+That's it. Docker will:
+1. Build the backend image and compile TypeScript
+2. Run `prisma migrate deploy` against your NeonDB — creates the schema on first run
+3. Start the Express API on port 3001
+4. Build the frontend image with the Vite dev server
+5. Serve the React app on port 5173
+ 
+Open **http://localhost:5173** — the app is live.
+ 
+### Stop
+ 
+```bash
+docker compose down
+```
+ 
+---
+
+## Local development (without Docker)
+
+###  Backend
 
 ```bash
 cd Backend
@@ -41,7 +70,7 @@ npx prisma migrate deploy     # runs versioned migrations
 npm run dev                   # http://localhost:3001
 ```
 
-### 3. Frontend
+### rontend
 
 From the repository root (`cd ..` if you are still inside `Backend`):
 
